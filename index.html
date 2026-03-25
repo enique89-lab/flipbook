@@ -2,7 +2,7 @@
 <html lang="mn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>📚 FlipBook</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -12,711 +12,617 @@
   --bg:#0f0e1a;--bg2:#181728;--bg3:#221f35;
   --gold:#c9a84c;--gold2:#a07828;
   --text:#dde0ec;--muted:#6b678f;
-  --brd:rgba(255,255,255,.08);--r:12px
+  --brd:rgba(255,255,255,.08)
 }
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
 input[type=file]{display:none}
 
-nav{background:var(--bg2);border-bottom:1px solid var(--brd);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{font-size:18px;font-weight:700;color:var(--gold)}.logo span{color:var(--text);font-weight:400}
-.nav-r{display:flex;gap:8px;align-items:center}
-.nb{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;line-height:1;transition:.15s}
-.nb.gh{background:transparent;border:1px solid var(--brd);color:var(--muted)}.nb.gh:hover{color:var(--text)}
-.nb.gd{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0f0e1a}.nb.gd:hover{opacity:.88}
-
-#homeScreen{display:block;max-width:860px;margin:0 auto;padding:32px 20px}
-#viewerScreen{display:none;flex-direction:column;align-items:center;padding:16px 16px 48px;min-height:calc(100vh - 57px)}
-
-.hero{text-align:center;padding:40px 0 30px}
-.hero h1{font-size:29px;font-weight:700;margin-bottom:10px}
-.hero h1 em{color:var(--gold);font-style:normal}
-.hero p{font-size:15px;color:var(--muted)}
-
-.dropzone{border:2px dashed rgba(201,168,76,.3);border-radius:var(--r);padding:40px 28px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:24px;background:rgba(201,168,76,.02);display:block}
-.dropzone:hover,.dropzone.over{border-color:var(--gold);background:rgba(201,168,76,.06)}
-.dicon{font-size:42px;margin-bottom:12px;display:block}
-.dropzone h2{font-size:17px;margin-bottom:5px}
-.dropzone p{font-size:13px;color:var(--muted)}
-.ftags{display:flex;justify-content:center;gap:8px;margin-top:12px}
-.tag{padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600}
+/* ── DROP SCREEN ── */
+#drop{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:var(--bg);
+  z-index:10
+}
+.drop-box{
+  border:2px dashed rgba(201,168,76,.35);
+  border-radius:20px;
+  padding:60px 48px;
+  text-align:center;
+  cursor:pointer;
+  transition:.25s;
+  max-width:480px;
+  width:90vw;
+  background:rgba(201,168,76,.03)
+}
+.drop-box:hover,.drop-box.over{
+  border-color:var(--gold);
+  background:rgba(201,168,76,.08)
+}
+.drop-box h1{font-size:28px;font-weight:700;margin-bottom:8px}
+.drop-box h1 em{color:var(--gold);font-style:normal}
+.drop-box p{font-size:14px;color:var(--muted);margin-bottom:28px}
+.pick-btn{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#0f0e1a;padding:12px 32px;
+  border-radius:10px;font-size:15px;
+  font-weight:600;cursor:pointer;
+  transition:.15s
+}
+.pick-btn:hover{opacity:.88;transform:translateY(-1px)}
+.ftags{display:flex;justify-content:center;gap:8px;margin-top:20px}
+.tag{padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600}
 .tpdf{background:rgba(220,70,50,.15);color:#f07060;border:1px solid rgba(220,70,50,.25)}
 .tppt{background:rgba(210,100,40,.15);color:#f0a060;border:1px solid rgba(210,100,40,.25)}
 
-.procbox{display:none;flex-direction:column;align-items:center;padding:32px;text-align:center}
-.procbox.show{display:flex}
-.procspinner{width:48px;height:48px;border:4px solid rgba(201,168,76,.15);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:14px}
-.procmsg{font-size:14px;font-weight:500;margin-bottom:4px}
-.procsub{font-size:12px;color:var(--muted);margin-bottom:10px}
-.procbar{width:220px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
-.procfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .3s;width:0%}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.sec-label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:28px}
-.bcard{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:.2s;display:flex;flex-direction:column}
-.bcard:hover{border-color:rgba(201,168,76,.4);transform:translateY(-3px)}
-.bthumb{height:110px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:30px;position:relative;overflow:hidden;flex-shrink:0}
-.bthumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.binfo{padding:8px 11px;flex:1}
-.bname{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
-.bmeta{font-size:11px;color:var(--muted)}
-.bacts{display:flex;gap:5px;padding:0 11px 9px}
-.abt{flex:1;padding:5px 0;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--brd);background:transparent;color:var(--muted);transition:.15s;text-align:center}
-.abt:hover{color:var(--text);background:var(--bg3)}
-.abt.shr{color:#5dc8a0;border-color:rgba(93,200,160,.3)}.abt.shr:hover{background:rgba(93,200,160,.1)}
-.abt.del{color:#f07060;border-color:rgba(240,112,96,.3)}.abt.del:hover{background:rgba(240,112,96,.1)}
-.empty{text-align:center;padding:32px;color:var(--muted);font-size:14px}
+/* ── PROCESSING ── */
+#proc{
+  position:fixed;inset:0;
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:var(--bg);z-index:20
+}
+.spinner{width:52px;height:52px;border:5px solid rgba(201,168,76,.15);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;margin-bottom:18px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pmsg{font-size:16px;font-weight:500;margin-bottom:6px}
+.psub{font-size:13px;color:var(--muted);margin-bottom:14px}
+.pbar{width:240px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.pfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .3s;width:0%}
 
 /* ── VIEWER ── */
-.vtop{width:100%;max-width:1100px;display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.backbtn{background:var(--bg2);border:1px solid var(--brd);color:var(--muted);padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;transition:.15s;white-space:nowrap}
-.backbtn:hover{color:var(--text)}
-.linkbar{flex:1;display:flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:5px 12px;min-width:0}
-.linkbar input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:12px;min-width:0}
-.cpybtn{background:rgba(201,168,76,.14);border:1px solid rgba(201,168,76,.3);color:var(--gold);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;transition:.15s}
-.cpybtn:hover{background:rgba(201,168,76,.28)}
+#viewer{
+  position:fixed;inset:0;
+  display:none;flex-direction:column;
+  align-items:center;
+  background:var(--bg);
+  z-index:5
+}
 
-.tbar{display:flex;align-items:center;gap:6px;background:var(--bg2);padding:7px 14px;border-radius:40px;border:1px solid var(--brd);margin-bottom:12px;flex-wrap:wrap;justify-content:center}
+/* top bar */
+.topbar{
+  width:100%;background:var(--bg2);
+  border-bottom:1px solid var(--brd);
+  padding:10px 20px;
+  display:flex;align-items:center;
+  justify-content:space-between;
+  gap:10px;flex-shrink:0
+}
+.docname{font-size:14px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.topbtn{background:transparent;border:1px solid var(--brd);color:var(--muted);padding:5px 13px;border-radius:7px;font-size:13px;cursor:pointer;transition:.15s;white-space:nowrap}
+.topbtn:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
+.topbtn.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0f0e1a;border:none;font-weight:600}
+.topbtn.gold:hover{opacity:.88}
+
+/* tool bar */
+.tbar{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 0;flex-shrink:0;
+  flex-wrap:wrap;justify-content:center
+}
 .tb{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#aaa;width:30px;height:30px;border-radius:7px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
-.tb:hover{background:rgba(255,255,255,.14);color:#ddd}.tb:active{transform:scale(.92)}
+.tb:hover{background:rgba(255,255,255,.14);color:#ddd}
+.tb:active{transform:scale(.92)}
 .tsep{width:1px;height:20px;background:var(--brd)}
 .zlbl{font-size:12px;color:var(--muted);min-width:36px;text-align:center}
 
-/* ── BOOK ──
-   spread=0 → cover (нэг хуудас, дунд)
-   spread>0 → 2 хуудас
-*/
-.bstage{perspective:2400px;display:flex;justify-content:center}
-
-/* Cover хуудас — ганцаараа дунд */
-.book-cover{
-  position:relative;
-  border-radius:4px 12px 12px 4px;
-  box-shadow:0 40px 90px rgba(0,0,0,.85);
+/* book area — takes remaining space */
+.book-area{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;
   overflow:hidden;
-  background:#f5f0e4;
+  width:100%;
+  padding:8px
 }
-.book-cover canvas{display:block}
 
-/* Spread хуудас — 2 тал */
-.book-spread{
+/* BOOK */
+.book-wrap{position:relative;display:flex;justify-content:center}
+
+/* Cover: нэг хуудас */
+.cover{
   position:relative;
-  display:flex;
-  border-radius:3px 10px 10px 3px;
-  box-shadow:0 40px 90px rgba(0,0,0,.85);
+  border-radius:4px 14px 14px 4px;
+  box-shadow:0 30px 80px rgba(0,0,0,.85);
+  overflow:hidden;background:#f5f0e4
 }
-.book-spread::before{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:linear-gradient(to right,rgba(0,0,0,.55),rgba(0,0,0,.08));z-index:10;border-radius:3px 0 0 3px;pointer-events:none}
+.cover canvas{display:block}
+
+/* Spread: хоёр хуудас */
+.spread{
+  position:relative;display:flex;
+  border-radius:3px 10px 10px 3px;
+  box-shadow:0 30px 80px rgba(0,0,0,.85)
+}
+.spread::before{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:linear-gradient(to right,rgba(0,0,0,.55),rgba(0,0,0,.08));z-index:10;border-radius:3px 0 0 3px;pointer-events:none}
 .pw{position:relative;overflow:hidden;background:#f5f0e4}
 .pw.L{border-radius:3px 0 0 3px;box-shadow:inset -10px 0 22px rgba(0,0,0,.28)}
 .pw.R{border-radius:0 10px 10px 0;box-shadow:inset 8px 0 18px rgba(0,0,0,.1)}
 .pw.R::after{content:'';position:absolute;bottom:0;right:0;width:40px;height:40px;background:linear-gradient(225deg,#181728 45%,transparent 45%);opacity:.5;pointer-events:none}
 .pw canvas{display:block}
 
-/* flip layer (spread mode дээр ашиглана) */
+/* flip */
 .fliplay{position:absolute;top:0;transform-origin:left center;transform-style:preserve-3d;z-index:30;pointer-events:none;display:none}
 .ff,.fb{position:absolute;top:0;left:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .fb{transform:rotateY(180deg)}
 @keyframes fwd{from{transform:rotateY(0)}to{transform:rotateY(-180deg)}}
 @keyframes bwd{from{transform:rotateY(-180deg)}to{transform:rotateY(0)}}
-.gofwd{display:block;animation:fwd .6s cubic-bezier(.645,.045,.355,1) forwards}
-.gobwd{display:block;animation:bwd .6s cubic-bezier(.645,.045,.355,1) forwards}
+.gofwd{display:block;animation:fwd .62s cubic-bezier(.645,.045,.355,1) forwards}
+.gobwd{display:block;animation:bwd .62s cubic-bezier(.645,.045,.355,1) forwards}
 
-.ctrls{display:flex;align-items:center;gap:11px;margin-top:16px;background:var(--bg2);padding:8px 20px;border-radius:50px;border:1px solid var(--brd)}
-.ctrl{background:rgba(201,168,76,.13);border:1px solid rgba(201,168,76,.26);color:var(--gold);width:36px;height:36px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+/* controls */
+.ctrls{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;flex-shrink:0
+}
+.ctrl{background:rgba(201,168,76,.13);border:1px solid rgba(201,168,76,.26);color:var(--gold);width:36px;height:36px;border-radius:50%;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
 .ctrl:hover{background:rgba(201,168,76,.26)}.ctrl:active{transform:scale(.92)}.ctrl:disabled{opacity:.22;cursor:default}
-.pinfo{font-size:13px;color:var(--muted);min-width:80px;text-align:center}
+.pinfo{font-size:13px;color:var(--muted);min-width:90px;text-align:center}
 .pinfo b{color:var(--gold);font-weight:600}
-.hint{margin-top:7px;font-size:11px;color:#2a2840}
-.hint kbd{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:10px}
 
-.thumbbar{display:flex;gap:6px;margin-top:12px;max-width:min(90vw,860px);overflow-x:auto;padding:5px 4px;scrollbar-width:thin;scrollbar-color:#2a2940 transparent}
+/* thumbs */
+.thumbbar{
+  display:flex;gap:5px;
+  padding:6px 12px 8px;
+  overflow-x:auto;flex-shrink:0;
+  max-width:100%;
+  scrollbar-width:thin;scrollbar-color:#2a2940 transparent
+}
 .th{flex-shrink:0;cursor:pointer;border:2px solid transparent;border-radius:4px;overflow:hidden;opacity:.44;transition:.2s;position:relative}
 .th:hover{opacity:.74}.th.on{border-color:var(--gold);opacity:1}
 .th canvas,.th img{display:block}
 .tnum{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,.75);background:rgba(0,0,0,.5)}
 
-.loader{position:fixed;inset:0;background:rgba(15,14,26,.94);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999}
-.loader.on{display:flex}
-.lspin{width:44px;height:44px;border:4px solid rgba(201,168,76,.14);border-top-color:var(--gold);border-radius:50%;animation:spin .75s linear infinite}
-.ltxt{margin-top:11px;font-size:13px;color:var(--muted)}
-.lbar{width:180px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:9px;overflow:hidden}
-.lfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .3s;width:0%}
+/* hint */
+.hint{font-size:11px;color:#2a2840;padding:2px 0 4px;flex-shrink:0}
+.hint kbd{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:3px;padding:1px 4px;font-family:monospace;font-size:10px}
 
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1e1c30;color:var(--text);border:1px solid var(--brd);padding:9px 20px;border-radius:30px;font-size:13px;z-index:1000;opacity:0;transition:opacity .28s;pointer-events:none;white-space:nowrap}
+/* toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1e1c30;color:var(--text);border:1px solid var(--brd);padding:8px 18px;border-radius:28px;font-size:13px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
 .toast.on{opacity:1}
+
+@media(max-width:520px){.pw.L{display:none}.spread::before{display:none}}
 </style>
 </head>
 <body>
 
-<nav>
-  <div class="logo">📚 <span>Flip</span>Book</div>
-  <div class="nav-r">
-    <button class="nb gh" id="navHome">🏠 Нүүр</button>
-    <label  class="nb gd" for="fileIn">＋ Upload</label>
-    <input type="file" id="fileIn" accept=".pdf,.pptx,.ppt" multiple>
-  </div>
-</nav>
-
-<!-- HOME -->
-<div id="homeScreen">
-  <div class="hero">
+<!-- DROP SCREEN -->
+<div id="drop">
+  <label class="drop-box" id="dz" for="fi">
     <h1>PDF & PPTX-ийг <em>flipbook</em> болгох</h1>
-    <p>Upload хийгээд шууд link авна — хэн ч нээж уншина</p>
-  </div>
-
-  <label class="dropzone" id="dropzone" for="fileIn">
-    <span class="dicon">📂</span>
-    <h2>Файлаа энд оруулна уу</h2>
-    <p>Чирж тавих эсвэл дарж сонгоно уу</p>
-    <div class="ftags"><span class="tag tpdf">PDF</span><span class="tag tppt">PPTX · PPT</span></div>
-  </label>
-
-  <div class="procbox" id="procbox">
-    <div class="procspinner"></div>
-    <div class="procmsg" id="procmsg">Боловсруулж байна...</div>
-    <div class="procsub" id="procsub"></div>
-    <div class="procbar"><div class="procfill" id="procfill"></div></div>
-  </div>
-
-  <div id="booksSection">
-    <div class="sec-label" id="secLabel" style="display:none">Хадгалагдсан номууд</div>
-    <div class="grid" id="booksGrid"></div>
-    <div class="empty" id="emptyMsg" style="display:none">
-      📄 Одоохондоо ном байхгүй байна<br>
-      <span style="font-size:12px;opacity:.6">Файл upload хийгээд эхлүүлнэ үү</span>
+    <p>Файлаа сонгоход шууд ном болгон нээгдэнэ</p>
+    <span class="pick-btn">📂 Файл сонгох</span>
+    <div class="ftags">
+      <span class="tag tpdf">PDF</span>
+      <span class="tag tppt">PPTX · PPT</span>
     </div>
-  </div>
+  </label>
+  <input type="file" id="fi" accept=".pdf,.pptx,.ppt">
+</div>
+
+<!-- PROCESSING -->
+<div id="proc">
+  <div class="spinner"></div>
+  <div class="pmsg" id="pmsg">Боловсруулж байна...</div>
+  <div class="psub" id="psub"></div>
+  <div class="pbar"><div class="pfill" id="pfill"></div></div>
 </div>
 
 <!-- VIEWER -->
-<div id="viewerScreen">
-  <div class="vtop">
-    <button class="backbtn" id="backBtn">← Буцах</button>
-    <div class="linkbar">
-      <span style="font-size:14px;flex-shrink:0">🔗</span>
-      <input id="shareUrl" readonly>
-      <button class="cpybtn" id="copyBtn">Хуулах</button>
-    </div>
+<div id="viewer">
+  <!-- top bar -->
+  <div class="topbar">
+    <div class="docname" id="docname">—</div>
+    <label class="topbtn gold" for="fi">＋ Шинэ файл</label>
+    <button class="topbtn" id="fsBtn">⛶</button>
   </div>
 
+  <!-- tool bar -->
   <div class="tbar">
     <button class="tb" id="zOut">−</button>
-    <span class="zlbl" id="zLabel">100%</span>
+    <span class="zlbl" id="zlbl">100%</span>
     <button class="tb" id="zIn">+</button>
     <div class="tsep"></div>
-    <button class="tb" id="fitBtn">⊡</button>
-    <button class="tb" id="fsBtn">⛶</button>
+    <button class="tb" id="fitBtn" title="Дэлгэцэнд тохируулах">⊡</button>
   </div>
 
-  <div class="bstage" id="bstage">
-    <!-- JS-ээр book-cover эсвэл book-spread үүсгэнэ -->
+  <!-- book -->
+  <div class="book-area" id="bookArea">
+    <div class="book-wrap" id="bookWrap"></div>
   </div>
 
+  <!-- controls -->
   <div class="ctrls">
     <button class="ctrl" id="goFirst">⟪</button>
     <button class="ctrl" id="goPrev">‹</button>
-    <div class="pinfo" id="pageInfo"></div>
+    <div class="pinfo" id="pinfo"></div>
     <button class="ctrl" id="goNext">›</button>
     <button class="ctrl" id="goLast">⟫</button>
   </div>
-  <div class="hint"><kbd>←</kbd> <kbd>→</kbd> хуудас &nbsp;·&nbsp; <kbd>+</kbd> <kbd>−</kbd> томруулах</div>
+
+  <div class="hint"><kbd>←</kbd> <kbd>→</kbd> хуудас &nbsp;·&nbsp; <kbd>+</kbd> <kbd>−</kbd> томруулах &nbsp;·&nbsp; <kbd>Space</kbd> дараагийн</div>
+
+  <!-- thumbs -->
   <div class="thumbbar" id="thumbbar"></div>
 </div>
 
-<div class="toast"  id="toast"></div>
-<div class="loader" id="loader">
-  <div class="lspin"></div>
-  <div class="ltxt"  id="loaderTxt">Уншиж байна...</div>
-  <div class="lbar"><div class="lfill" id="loaderFill"></div></div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-/* ── IndexedDB ─────────────────────────────────────────── */
-const IDB = {
-  db:null,
-  async open(){
-    if(this.db)return this.db;
-    return new Promise((res,rej)=>{
-      const r=indexedDB.open('flipbooks',1);
-      r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('books'))d.createObjectStore('books',{keyPath:'id'});};
-      r.onsuccess=e=>{this.db=e.target.result;res(this.db);};
-      r.onerror=e=>rej(e.target.error);
-    });
-  },
-  async all(){const db=await this.open();return new Promise((res,rej)=>{const r=db.transaction('books','readonly').objectStore('books').getAll();r.onsuccess=e=>res(e.target.result.sort((a,b)=>b.created-a.created));r.onerror=e=>rej(e.target.error);});},
-  async get(id){const db=await this.open();return new Promise((res,rej)=>{const r=db.transaction('books','readonly').objectStore('books').get(id);r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);});},
-  async add(b){const db=await this.open();return new Promise((res,rej)=>{const r=db.transaction('books','readwrite').objectStore('books').put(b);r.onsuccess=()=>res();r.onerror=e=>rej(e.target.error);});},
-  async del(id){const db=await this.open();return new Promise((res,rej)=>{const r=db.transaction('books','readwrite').objectStore('books').delete(id);r.onsuccess=()=>res();r.onerror=e=>rej(e.target.error);});}
-};
+/* ── STATE ─────────────────────────────── */
+let pdfDoc = null, slides = [], fileType = '';
+let totalPages = 0, spread = 0, busy = false;
+let rawW = 0, rawH = 0, fitSc = 1;
 
-/* ── STATE ─────────────────────────────────────────────── */
-let curBook=null, pdfDoc=null, slides=[];
-let totalPages=0, spread=0, busy=false;
-let pageW=0, pageH=0, fitScale=1;
-
-/*
-  SPREAD LOGIC:
-  spread=0  → Cover: зөвхөн 1-р хуудас (нэг хуудас дунд)
-  spread=1  → 2-р, 3-р хуудас (L=2, R=3)
-  spread=2  → 4-р, 5-р хуудас (L=4, R=5)
-  ...
-  L page  = spread*2
-  R page  = spread*2 + 1
-  (spread=0 үед cover mode)
+/* spread logic:
+   spread=0 → cover (зөвхөн 1-р хуудас)
+   spread≥1 → L=spread*2, R=spread*2+1
 */
-function totalSpreads(n){ return Math.ceil((n-1)/2)+1; } // cover + pairs
-function spreadPages(s, total){
-  if(s===0) return {l:1, r:0};           // cover
-  const l=s*2, r=s*2+1;
-  return {l, r: r<=total ? r : 0};
+const totalSpreads = () => totalPages <= 1 ? 1 : Math.ceil((totalPages - 1) / 2) + 1;
+const spreadPages  = s => s === 0
+  ? { l: 1, r: 0 }
+  : { l: s * 2, r: s * 2 + 1 <= totalPages ? s * 2 + 1 : 0 };
+
+/* ── SCREENS ───────────────────────────── */
+const $ = id => document.getElementById(id);
+const showDrop   = () => { $('drop').style.display='flex'; $('proc').style.display='none'; $('viewer').style.display='none'; }
+const showProc   = () => { $('drop').style.display='none'; $('proc').style.display='flex'; $('viewer').style.display='none'; }
+const showViewer = () => { $('drop').style.display='none'; $('proc').style.display='none'; $('viewer').style.display='flex'; }
+
+/* ── FILE INPUT ────────────────────────── */
+$('fi').onchange = e => { if (e.target.files[0]) load(e.target.files[0]); e.target.value = ''; };
+const dz = $('dz');
+dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('over'); if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+
+/* ── LOAD ──────────────────────────────── */
+async function load(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['pdf','pptx','ppt'].includes(ext)) { toast('⚠️ PDF эсвэл PPTX файл оруулна уу'); return; }
+  fileType = ext === 'pdf' ? 'pdf' : 'pptx';
+  $('docname').textContent = file.name.replace(/\.[^.]+$/, '');
+  showProc();
+  setP(5, 'Файл уншиж байна...');
+  try {
+    const buf = await file.arrayBuffer();
+    if (fileType === 'pdf') await loadPDF(buf);
+    else                    await loadPPTX(buf);
+  } catch(err) {
+    showDrop(); toast('⚠️ ' + err.message); console.error(err);
+  }
 }
 
-/* ── PAGE SWITCH ───────────────────────────────────────── */
-function showHome(){
-  document.getElementById('viewerScreen').style.display='none';
-  document.getElementById('homeScreen').style.display='block';
-  renderGrid();
+/* ── PDF ───────────────────────────────── */
+async function loadPDF(buf) {
+  pdfDoc = null; slides = [];
+  const task = pdfjsLib.getDocument({ data: buf });
+  task.onProgress = p => { if (p.total) setP(5 + p.loaded / p.total * 30, 'PDF уншиж байна...'); };
+  pdfDoc = await task.promise;
+  totalPages = pdfDoc.numPages;
+  setP(38, '');
+  const vp = (await pdfDoc.getPage(1)).getViewport({ scale: 1 });
+  rawW = vp.width; rawH = vp.height;
+  calcFit();
+  await buildThumbs();
+  showViewer();
+  await renderSpread(0);
 }
-function showViewer(){
-  document.getElementById('homeScreen').style.display='none';
-  document.getElementById('viewerScreen').style.display='flex';
-}
-document.getElementById('navHome').onclick=showHome;
-document.getElementById('backBtn').onclick=showHome;
 
-/* ── FILE INPUT ────────────────────────────────────────── */
-document.getElementById('fileIn').onchange=e=>{[...e.target.files].forEach(handleFile);e.target.value='';};
-const dz=document.getElementById('dropzone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over');});
-dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
-dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');[...e.dataTransfer.files].forEach(handleFile);});
-
-async function handleFile(file){
-  const ext=file.name.split('.').pop().toLowerCase();
-  if(!['pdf','pptx','ppt'].includes(ext)){toast('⚠️ PDF эсвэл PPTX оруулна уу');return;}
-  const type=ext==='pdf'?'pdf':'pptx';
-  showProc(`"${file.name}" боловсруулж байна...`);
-  try{
-    const buf=await file.arrayBuffer();
-    const data=b64enc(buf);
-    let thumb='',pages=0;
-    if(type==='pdf'){
-      const p=await pdfjsLib.getDocument({data:buf.slice()}).promise;
-      pages=p.numPages;setProc(30,'');
-      thumb=await pdfThumb(p,1);setProc(70,'');
-    }else{
-      const r=await pptxMeta(buf.slice());pages=r.count;thumb=r.thumb;setProc(70,'');
+/* ── PPTX ──────────────────────────────── */
+async function loadPPTX(buf) {
+  pdfDoc = null; slides = [];
+  const zip = await JSZip.loadAsync(buf);
+  let sW = 960, sH = 540;
+  try {
+    const px = await zip.file('ppt/presentation.xml').async('string');
+    const cM = px.match(/cx="(\d+)"/), yM = px.match(/cy="(\d+)"/);
+    if (cM && yM) { sW = Math.round(parseInt(cM[1])/914400*96); sH = Math.round(parseInt(yM[1])/914400*96); }
+  } catch(e) {}
+  const sFiles = Object.keys(zip.files)
+    .filter(f => /^ppt\/slides\/slide\d+\.xml$/.test(f))
+    .sort((a,b) => parseInt(a.match(/\d+/)[0]) - parseInt(b.match(/\d+/)[0]));
+  totalPages = sFiles.length;
+  if (!totalPages) throw new Error('Слайд олдсонгүй');
+  const rW = Math.max(sW, 640), rH = Math.round(rW * sH / sW);
+  rawW = rW; rawH = rH;
+  const media = {};
+  for (const [p, e] of Object.entries(zip.files)) {
+    if (p.startsWith('ppt/media/') && !e.dir) {
+      const ex = p.split('.').pop().toLowerCase();
+      media[p.split('/').pop()] = URL.createObjectURL(new Blob([await e.async('blob')], { type: ex === 'png' ? 'image/png' : 'image/jpeg' }));
     }
-    const id='fb_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
-    await IDB.add({id,name:file.name.replace(/\.[^.]+$/,''),type,created:Date.now(),pages,thumb,data});
-    setProc(100,'');await sleep(300);hideProc();
-    renderGrid();await openBook(id);
-  }catch(err){hideProc();toast('⚠️ '+err.message);console.error(err);}
-}
-
-/* ── HELPERS ───────────────────────────────────────────── */
-function b64enc(buf){let s='';const b=new Uint8Array(buf);for(let i=0;i<b.length;i+=4096)s+=String.fromCharCode(...b.subarray(i,i+4096));return btoa(s);}
-function b64dec(s){const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a.buffer;}
-async function pdfThumb(p,n){const pg=await p.getPage(n);const vp=pg.getViewport({scale:.18});const cv=mkC(vp.width,vp.height);const ctx=cv.getContext('2d');ctx.fillStyle='#f5f0e4';ctx.fillRect(0,0,vp.width,vp.height);await pg.render({canvasContext:ctx,viewport:vp}).promise;return cv.toDataURL('image/jpeg',.82);}
-async function pptxMeta(buf){const zip=await JSZip.loadAsync(buf);const count=Object.keys(zip.files).filter(f=>/^ppt\/slides\/slide\d+\.xml$/.test(f)).length;let thumb='';try{const mf=Object.keys(zip.files).find(f=>f.startsWith('ppt/media/')&&/\.(png|jpg|jpeg)$/i.test(f));if(mf){const blob=await zip.file(mf).async('blob');thumb=await new Promise(r=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.readAsDataURL(blob);});}}catch(e){}return{count,thumb};}
-const mkC=(w,h,id)=>{const c=document.createElement('canvas');c.width=w;c.height=h;if(id)c.id=id;return c;};
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-/* ── GRID ──────────────────────────────────────────────── */
-async function renderGrid(){
-  const books=await IDB.all();
-  const grid=document.getElementById('booksGrid');
-  const lbl=document.getElementById('secLabel');
-  const empty=document.getElementById('emptyMsg');
-  grid.innerHTML='';
-  if(!books.length){lbl.style.display='none';empty.style.display='block';return;}
-  lbl.style.display='block';empty.style.display='none';
-  for(const b of books){
-    const c=document.createElement('div');c.className='bcard';
-    const hi=b.thumb&&b.thumb.startsWith('data:');
-    c.innerHTML=`<div class="bthumb">${hi?`<img src="${b.thumb}" alt="">`:`<span>${b.type==='pdf'?'📄':'📊'}</span>`}</div>
-<div class="binfo"><div class="bname">${esc(b.name)}</div><div class="bmeta">${b.pages} хуудас · ${new Date(b.created).toLocaleDateString('mn-MN')}</div></div>
-<div class="bacts">
-  <div class="abt open" data-id="${b.id}">📖 Нээх</div>
-  <div class="abt shr"  data-id="${b.id}">🔗 Link</div>
-  <div class="abt del"  data-id="${b.id}">🗑</div>
-</div>`;
-    c.querySelector('.open').onclick=e=>{e.stopPropagation();openBook(b.id);};
-    c.querySelector('.shr').onclick =e=>{e.stopPropagation();copyLink(b.id);};
-    c.querySelector('.del').onclick =e=>{e.stopPropagation();if(confirm(`"${b.name}" устгах уу?`)){IDB.del(b.id);renderGrid();}};
-    c.ondblclick=()=>openBook(b.id);
-    grid.appendChild(c);
   }
-}
-
-/* ── LINK ──────────────────────────────────────────────── */
-const linkFor=id=>location.href.split('#')[0]+'#'+id;
-function copyLink(id){navigator.clipboard.writeText(linkFor(id)).then(()=>toast('✅ Link хуулагдлаа!')).catch(()=>toast('⚠️ Хуулах боломжгүй'));}
-document.getElementById('copyBtn').onclick=()=>{const v=document.getElementById('shareUrl').value;if(v)navigator.clipboard.writeText(v).then(()=>toast('✅ Link хуулагдлаа!')).catch(()=>{});};
-
-/* ── OPEN ──────────────────────────────────────────────── */
-async function openBook(id){
-  showLoader('Ном нээж байна...');
-  try{
-    const b=await IDB.get(id);
-    if(!b){hideLoader();toast('⚠️ Ном олдсонгүй. Дахин upload хийнэ үү.');return;}
-    curBook=b;
-    document.getElementById('shareUrl').value=linkFor(id);
-    const buf=b64dec(b.data);
-    if(b.type==='pdf') await loadPDF(buf);
-    else               await loadPPTX(buf);
-    showViewer();
-  }catch(err){hideLoader();toast('⚠️ '+err.message);console.error(err);}
-}
-
-/* ── PDF LOAD ──────────────────────────────────────────── */
-async function loadPDF(buf){
-  pdfDoc=null;slides=[];
-  const task=pdfjsLib.getDocument({data:buf});
-  task.onProgress=p=>{if(p.total)setLoader(p.loaded/p.total*50);};
-  pdfDoc=await task.promise;totalPages=pdfDoc.numPages;setLoader(55);
-  // хэмжээ авах
-  const vp=(await pdfDoc.getPage(1)).getViewport({scale:1});
-  pageW=vp.width;pageH=vp.height;
-  calcFitScale();
-  await buildViewer();
-  await buildPDFThumbs();
-  hideLoader();
+  for (let i = 0; i < sFiles.length; i++) {
+    setP(10 + i / sFiles.length * 70, `Слайд ${i+1}/${sFiles.length}`);
+    slides.push(await renderSlide(zip, sFiles[i], sW, sH, rW, rH, media));
+  }
+  calcFit();
+  await buildThumbs();
+  showViewer();
   await renderSpread(0);
 }
 
-/* ── PPTX LOAD ─────────────────────────────────────────── */
-async function loadPPTX(buf){
-  pdfDoc=null;slides=[];
-  const zip=await JSZip.loadAsync(buf);
-  let sW=960,sH=540;
-  try{const px=await zip.file('ppt/presentation.xml').async('string');const cM=px.match(/cx="(\d+)"/),yM=px.match(/cy="(\d+)"/);if(cM&&yM){sW=Math.round(parseInt(cM[1])/914400*96);sH=Math.round(parseInt(yM[1])/914400*96);}}catch(e){}
-  const sF=Object.keys(zip.files).filter(f=>/^ppt\/slides\/slide\d+\.xml$/.test(f)).sort((a,b)=>parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0]));
-  totalPages=sF.length;if(!totalPages)throw new Error('Слайд олдсонгүй');
-  const rW=Math.max(sW,640),rH=Math.round(rW*sH/sW);
-  pageW=rW;pageH=rH;
-  const media={};
-  for(const[p,e] of Object.entries(zip.files)){if(p.startsWith('ppt/media/')&&!e.dir){const ex=p.split('.').pop().toLowerCase();media[p.split('/').pop()]=URL.createObjectURL(new Blob([await e.async('blob')],{type:ex==='png'?'image/png':'image/jpeg'}));}}
-  for(let i=0;i<sF.length;i++){setLoader(20+i/sF.length*65);setLoaderTxt(`Слайд ${i+1}/${sF.length}`);slides.push(await renderSlide(zip,sF[i],sW,sH,rW,rH,media));}
-  calcFitScale();
-  await buildViewer();
-  buildPPTXThumbs();
-  hideLoader();
-  await renderSpread(0);
+/* ── FIT SCALE ─────────────────────────── */
+function calcFit() {
+  const aw = window.innerWidth - 24;
+  const ah = window.innerHeight - 160; // topbar+tbar+ctrls+thumbs+hint
+  // cover uses 1 page, spread uses 2 side by side
+  const sc1 = Math.min(aw / rawW, ah / rawH);
+  const sc2 = Math.min((aw / 2) / rawW, ah / rawH);
+  fitSc = Math.min(sc1, sc2, 1.8);
+  fitSc = Math.max(fitSc, 0.25);
 }
 
-/* ── FIT SCALE: дэлгэцэнд таарах scale тооцох ─────────── */
-function calcFitScale(){
-  // available width = window - padding (32px*2), cover нь нэг хуудас, spread нь 2
-  const maxW=Math.min(window.innerWidth-64, 1100);
-  const maxH=window.innerHeight-220; // nav+toolbar+ctrls+thumbs
-  // cover: 1 page fits in maxW × maxH
-  const scaleByCoverW=maxW/pageW;
-  const scaleByCoverH=maxH/pageH;
-  // spread: 2 pages side by side → available width / 2
-  const scaleBySpreadW=(maxW/2)/pageW;
-  // most restrictive
-  fitScale=Math.min(scaleByCoverW, scaleByCoverH, scaleBySpreadW, 1.5);
-  fitScale=Math.max(fitScale, 0.3);
-}
+/* ── RENDER SPREAD ─────────────────────── */
+async function renderSpread(s) {
+  spread = s;
+  const { l, r } = spreadPages(s);
+  const isCover = s === 0;
+  const sc = fitSc;
+  const W = Math.round(rawW * sc), H = Math.round(rawH * sc);
+  const wrap = $('bookWrap');
+  wrap.innerHTML = '';
 
-/* ── BUILD VIEWER DOM ──────────────────────────────────── */
-async function buildViewer(){
-  const stage=document.getElementById('bstage');
-  stage.innerHTML='';
-  // We'll dynamically create cover vs spread in renderSpread
-  spread=0;
-  document.getElementById('thumbbar').innerHTML='';
-  updBtns();
-}
-
-/* ── RENDER SPREAD ─────────────────────────────────────── */
-async function renderSpread(s){
-  spread=s;
-  const ts=totalSpreads(totalPages);
-  const {l,r}=spreadPages(s,totalPages);
-  const stage=document.getElementById('bstage');
-  const isCover=(s===0);
-  const sc=fitScale;
-  const W=Math.round(pageW*sc), H=Math.round(pageH*sc);
-
-  // Rebuild book DOM depending on cover vs spread
-  stage.innerHTML='';
-
-  if(isCover){
-    // ── Cover: нэг хуудас дунд ──
-    const book=document.createElement('div');
-    book.className='book-cover';
-    book.style.width=W+'px';book.style.height=H+'px';
-    const cv=mkC(W,H,'cvCover');
-    book.appendChild(cv);
-    stage.appendChild(book);
-    await drawScaled(cv,1,sc);
-    // info
-    document.getElementById('pageInfo').innerHTML=`<b>Нүүр хуудас</b> / <b>${totalPages}</b>`;
+  if (isCover) {
+    const div = document.createElement('div');
+    div.className = 'cover';
+    div.style.width = W + 'px'; div.style.height = H + 'px';
+    const cv = mkC(W, H, 'cvC');
+    div.appendChild(cv); wrap.appendChild(div);
+    await drawScaled(cv, 1, sc);
+    $('pinfo').innerHTML = `<b>Нүүр</b> / <b>${totalPages}</b>`;
   } else {
-    // ── Spread: хоёр хуудас ──
-    const book=document.createElement('div');
-    book.className='book-spread';
-    // Left
-    const pL=document.createElement('div');pL.className='pw L';pL.style.width=W+'px';pL.style.height=H+'px';
-    const cvL=mkC(W,H,'cvL');pL.appendChild(cvL);book.appendChild(pL);
-    // Right
-    const pR=document.createElement('div');pR.className='pw R';pR.style.width=W+'px';pR.style.height=H+'px';
-    const cvR=mkC(W,H,'cvR');pR.appendChild(cvR);book.appendChild(pR);
-    // Flip layer
-    const fl=document.createElement('div');fl.className='fliplay';fl.id='flipLayer';
-    fl.style.width=W+'px';fl.style.height=H+'px';
-    const ff=mkC(W,H,'flipFront');ff.className='ff';
-    const fb=mkC(W,H,'flipBack');fb.className='fb';
-    fl.appendChild(ff);fl.appendChild(fb);book.appendChild(fl);
-    stage.appendChild(book);
-    await drawScaled(cvL,l,sc);
-    if(r) await drawScaled(cvR,r,sc); else blankCanvas(cvR);
-    // info
-    document.getElementById('pageInfo').innerHTML=r
-      ? `<b>${l}</b>–<b>${r}</b> / <b>${totalPages}</b>`
-      : `<b>${l}</b> / <b>${totalPages}</b>`;
+    const div = document.createElement('div'); div.className = 'spread';
+    const pL = document.createElement('div'); pL.className = 'pw L';
+    pL.style.width = W + 'px'; pL.style.height = H + 'px';
+    const cvL = mkC(W, H, 'cvL'); pL.appendChild(cvL); div.appendChild(pL);
+    const pR = document.createElement('div'); pR.className = 'pw R';
+    pR.style.width = W + 'px'; pR.style.height = H + 'px';
+    const cvR = mkC(W, H, 'cvR'); pR.appendChild(cvR); div.appendChild(pR);
+    const fl = document.createElement('div'); fl.className = 'fliplay'; fl.id = 'FL';
+    fl.style.width = W + 'px'; fl.style.height = H + 'px';
+    const ff = mkC(W, H, 'FF'); ff.className = 'ff';
+    const fb = mkC(W, H, 'FB'); fb.className = 'fb';
+    fl.appendChild(ff); fl.appendChild(fb); div.appendChild(fl);
+    wrap.appendChild(div);
+    await drawScaled(cvL, l, sc);
+    if (r) await drawScaled(cvR, r, sc); else blank(cvR);
+    $('pinfo').innerHTML = r ? `<b>${l}</b>–<b>${r}</b> / <b>${totalPages}</b>` : `<b>${l}</b> / <b>${totalPages}</b>`;
   }
-  updThumb();updBtns();
+  updThumb(); updBtns();
 }
 
-/* ── DRAW PAGE SCALED ──────────────────────────────────── */
-async function drawScaled(cv,pn,sc){
-  const ctx=cv.getContext('2d');
-  ctx.clearRect(0,0,cv.width,cv.height);
-  ctx.fillStyle='#f5f0e4';ctx.fillRect(0,0,cv.width,cv.height);
-  if(!pn)return;
-  if(curBook.type==='pdf'){
-    const pg=await pdfDoc.getPage(pn);
-    const vp=pg.getViewport({scale:sc});
-    cv.width=vp.width;cv.height=vp.height;
-    ctx.fillStyle='#f5f0e4';ctx.fillRect(0,0,cv.width,cv.height);
-    await pg.render({canvasContext:ctx,viewport:vp}).promise;
-  }else{
-    const img=new Image();
-    await new Promise(res=>{img.onload=res;img.src=slides[pn-1];});
-    ctx.drawImage(img,0,0,cv.width,cv.height);
+async function drawScaled(cv, pn, sc) {
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#f5f0e4'; ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!pn) return;
+  if (fileType === 'pdf') {
+    const pg = await pdfDoc.getPage(pn);
+    const vp = pg.getViewport({ scale: sc });
+    cv.width = vp.width; cv.height = vp.height;
+    ctx.fillStyle = '#f5f0e4'; ctx.fillRect(0, 0, cv.width, cv.height);
+    await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+  } else {
+    const img = new Image();
+    await new Promise(res => { img.onload = res; img.src = slides[pn - 1]; });
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
   }
 }
-function blankCanvas(cv){const ctx=cv.getContext('2d');ctx.fillStyle='#f0ebe0';ctx.fillRect(0,0,cv.width,cv.height);}
+const blank = cv => { const ctx = cv.getContext('2d'); ctx.fillStyle = '#f0ebe0'; ctx.fillRect(0, 0, cv.width, cv.height); };
 
-/* ── FLIP ANIMATION ────────────────────────────────────── */
-async function flipFwd(){
-  const ts=totalSpreads(totalPages);
-  if(busy||spread>=ts-1)return;
-  busy=true;
-  const nx=spread+1;
-  const {l:nl,r:nr}=spreadPages(nx,totalPages);
-  const sc=fitScale;
-  const W=Math.round(pageW*sc),H=Math.round(pageH*sc);
+/* ── FLIP ──────────────────────────────── */
+async function flipFwd() {
+  const ts = totalSpreads();
+  if (busy || spread >= ts - 1) return;
+  busy = true;
+  const nx = spread + 1;
+  const sc = fitSc;
+  const W = Math.round(rawW * sc);
 
-  // Ensure we're in spread mode (cover→spread transition)
-  if(spread===0){
-    // just jump
-    busy=false;await renderSpread(nx);return;
-  }
+  if (spread === 0) { busy = false; await renderSpread(nx); return; }
 
-  const cvR=document.getElementById('cvR');
-  const FL=document.getElementById('flipLayer');
-  if(!cvR||!FL){busy=false;await renderSpread(nx);return;}
-
-  const ff=document.getElementById('flipFront');
-  const fb=document.getElementById('flipBack');
-  ff.getContext('2d').drawImage(cvR,0,0);
-  await drawScaled(fb,nl,sc);
-  FL.style.left=W+'px';FL.className='fliplay gofwd';
-
-  const cvL=document.getElementById('cvL');
-  await drawScaled(cvL,nl,sc);
-  if(nr)await drawScaled(cvR,nr,sc);else blankCanvas(cvR);
-
-  FL.addEventListener('animationend',()=>{
-    FL.className='fliplay';spread=nx;
-    const{l,r}=spreadPages(nx,totalPages);
-    document.getElementById('pageInfo').innerHTML=r
-      ?`<b>${l}</b>–<b>${r}</b> / <b>${totalPages}</b>`
-      :`<b>${l}</b> / <b>${totalPages}</b>`;
-    updThumb();updBtns();busy=false;
-  },{once:true});
+  const cvR = $('cvR'), FL = $('FL');
+  if (!cvR || !FL) { busy = false; await renderSpread(nx); return; }
+  const { l: nl, r: nr } = spreadPages(nx);
+  $('FF').getContext('2d').drawImage(cvR, 0, 0);
+  await drawScaled($('FB'), nl, sc);
+  FL.style.left = W + 'px'; FL.className = 'fliplay gofwd';
+  await drawScaled($('cvL'), nl, sc);
+  if (nr) await drawScaled(cvR, nr, sc); else blank(cvR);
+  FL.addEventListener('animationend', () => {
+    FL.className = 'fliplay'; spread = nx;
+    const { l, r } = spreadPages(nx);
+    $('pinfo').innerHTML = r ? `<b>${l}</b>–<b>${r}</b> / <b>${totalPages}</b>` : `<b>${l}</b> / <b>${totalPages}</b>`;
+    updThumb(); updBtns(); busy = false;
+  }, { once: true });
 }
 
-async function flipBwd(){
-  if(busy||spread<=0)return;
-  busy=true;
-  const pv=spread-1;
-  const {l:pl,r:pr}=spreadPages(pv,totalPages);
-  const sc=fitScale;
-  const W=Math.round(pageW*sc);
+async function flipBwd() {
+  if (busy || spread <= 0) return;
+  busy = true;
+  const pv = spread - 1;
+  const sc = fitSc;
+  const W = Math.round(rawW * sc);
 
-  // spread→cover: just jump
-  if(pv===0){busy=false;await renderSpread(0);return;}
+  if (pv === 0) { busy = false; await renderSpread(0); return; }
 
-  const cvL=document.getElementById('cvL');
-  const FL=document.getElementById('flipLayer');
-  if(!cvL||!FL){busy=false;await renderSpread(pv);return;}
-
-  const ff=document.getElementById('flipFront');
-  const fb=document.getElementById('flipBack');
-  fb.getContext('2d').drawImage(cvL,0,0);
-  if(pr)await drawScaled(ff,pr,sc);else blankCanvas(ff);
-  FL.style.left=W+'px';FL.className='fliplay gobwd';
-
-  const cvR=document.getElementById('cvR');
-  await drawScaled(cvL,pl,sc);
-  if(pr)await drawScaled(cvR,pr,sc);else blankCanvas(cvR);
-
-  FL.addEventListener('animationend',()=>{
-    FL.className='fliplay';spread=pv;
-    const{l,r}=spreadPages(pv,totalPages);
-    document.getElementById('pageInfo').innerHTML=r
-      ?`<b>${l}</b>–<b>${r}</b> / <b>${totalPages}</b>`
-      :`<b>${l}</b> / <b>${totalPages}</b>`;
-    updThumb();updBtns();busy=false;
-  },{once:true});
+  const cvL = $('cvL'), FL = $('FL');
+  if (!cvL || !FL) { busy = false; await renderSpread(pv); return; }
+  const { l: pl, r: pr } = spreadPages(pv);
+  $('FB').getContext('2d').drawImage(cvL, 0, 0);
+  if (pr) await drawScaled($('FF'), pr, sc); else blank($('FF'));
+  FL.style.left = W + 'px'; FL.className = 'fliplay gobwd';
+  await drawScaled(cvL, pl, sc);
+  if (pr) await drawScaled($('cvR'), pr, sc); else blank($('cvR'));
+  FL.addEventListener('animationend', () => {
+    FL.className = 'fliplay'; spread = pv;
+    const { l, r } = spreadPages(pv);
+    $('pinfo').innerHTML = r ? `<b>${l}</b>–<b>${r}</b> / <b>${totalPages}</b>` : `<b>${l}</b> / <b>${totalPages}</b>`;
+    updThumb(); updBtns(); busy = false;
+  }, { once: true });
 }
 
-document.getElementById('goPrev').onclick =flipBwd;
-document.getElementById('goNext').onclick =flipFwd;
-document.getElementById('goFirst').onclick=()=>{if(!busy)renderSpread(0);};
-document.getElementById('goLast').onclick =()=>{if(!busy)renderSpread(totalSpreads(totalPages)-1);};
+$('goPrev').onclick  = flipBwd;
+$('goNext').onclick  = flipFwd;
+$('goFirst').onclick = () => { if (!busy) renderSpread(0); };
+$('goLast').onclick  = () => { if (!busy) renderSpread(totalSpreads() - 1); };
 
-document.addEventListener('keydown',e=>{
-  if(document.getElementById('viewerScreen').style.display==='none')return;
-  if(e.key==='ArrowRight'||e.key==='ArrowDown')flipFwd();
-  if(e.key==='ArrowLeft' ||e.key==='ArrowUp')  flipBwd();
-  if(e.key==='+'||e.key==='=')adjScale(.08);
-  if(e.key==='-')adjScale(-.08);
+document.addEventListener('keydown', e => {
+  if ($('viewer').style.display === 'none') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); flipFwd(); }
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   flipBwd();
+  if (e.key === '+' || e.key === '=') adjScale(0.08);
+  if (e.key === '-') adjScale(-0.08);
 });
-let tx=0;
-document.getElementById('bstage').addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
-document.getElementById('bstage').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(d<-50)flipFwd();else if(d>50)flipBwd();});
 
-function updBtns(){
-  const ts=totalSpreads(totalPages);
-  document.getElementById('goPrev').disabled =spread<=0;
-  document.getElementById('goFirst').disabled=spread<=0;
-  document.getElementById('goNext').disabled =spread>=ts-1;
-  document.getElementById('goLast').disabled =spread>=ts-1;
+let tx = 0;
+$('bookArea').addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+$('bookArea').addEventListener('touchend',   e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  if (dx < -50) flipFwd(); else if (dx > 50) flipBwd();
+});
+
+function updBtns() {
+  const ts = totalSpreads();
+  $('goPrev').disabled  = spread <= 0;
+  $('goFirst').disabled = spread <= 0;
+  $('goNext').disabled  = spread >= ts - 1;
+  $('goLast').disabled  = spread >= ts - 1;
 }
 
-/* ── ZOOM ──────────────────────────────────────────────── */
-async function adjScale(d){
-  fitScale=Math.max(.2,Math.min(2.5,fitScale+d));
-  document.getElementById('zLabel').textContent=Math.round(fitScale*100/calcBaseFitScale()*100)+'%';
+/* ── ZOOM ──────────────────────────────── */
+async function adjScale(d) {
+  fitSc = Math.max(0.15, Math.min(2.5, fitSc + d));
+  $('zlbl').textContent = Math.round(fitSc / calcBaseFit() * 100) + '%';
   await renderSpread(spread);
 }
-function calcBaseFitScale(){
-  const maxW=Math.min(window.innerWidth-64,1100);
-  const maxH=window.innerHeight-220;
-  return Math.min(maxW/pageW, maxH/pageH, (maxW/2)/pageW, 1.5);
+function calcBaseFit() {
+  const aw = window.innerWidth - 24, ah = window.innerHeight - 160;
+  return Math.min(Math.min(aw / rawW, ah / rawH), Math.min((aw/2) / rawW, ah / rawH), 1.8);
 }
-document.getElementById('zIn').onclick =()=>adjScale(.08);
-document.getElementById('zOut').onclick=()=>adjScale(-.08);
-document.getElementById('fitBtn').onclick=async()=>{calcFitScale();document.getElementById('zLabel').textContent='100%';await renderSpread(spread);};
-document.getElementById('fsBtn').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();};
-window.addEventListener('resize',()=>{if(document.getElementById('viewerScreen').style.display!=='none'){calcFitScale();renderSpread(spread);}});
+$('zIn').onclick  = () => adjScale(0.08);
+$('zOut').onclick = () => adjScale(-0.08);
+$('fitBtn').onclick = async () => { calcFit(); $('zlbl').textContent = '100%'; await renderSpread(spread); };
+$('fsBtn').onclick  = () => {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+};
+window.addEventListener('resize', () => {
+  if ($('viewer').style.display !== 'none') { calcFit(); renderSpread(spread); }
+});
 
-/* ── THUMBS ────────────────────────────────────────────── */
-async function buildPDFThumbs(){
-  const tb=document.getElementById('thumbbar');tb.innerHTML='';
-  for(let i=1;i<=totalPages;i++){
-    setLoader(55+i/totalPages*42);setLoaderTxt(`Зураг ${i}/${totalPages}`);
-    const pg=await pdfDoc.getPage(i);const vp=pg.getViewport({scale:.12});
-    const cv=mkC(vp.width,vp.height);const ctx=cv.getContext('2d');
-    ctx.fillStyle='#f5f0e4';ctx.fillRect(0,0,vp.width,vp.height);
-    await pg.render({canvasContext:ctx,viewport:vp}).promise;
-    tb.appendChild(mkThumb(cv,i));
+/* ── THUMBS ────────────────────────────── */
+async function buildThumbs() {
+  const tb = $('thumbbar'); tb.innerHTML = '';
+  if (fileType === 'pdf') {
+    for (let i = 1; i <= totalPages; i++) {
+      setP(40 + i / totalPages * 55, `Зураг ${i}/${totalPages}`);
+      const pg = await pdfDoc.getPage(i);
+      const vp = pg.getViewport({ scale: 0.11 });
+      const cv = mkC(vp.width, vp.height);
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#f5f0e4'; ctx.fillRect(0, 0, vp.width, vp.height);
+      await pg.render({ canvasContext: ctx, viewport: vp }).promise;
+      tb.appendChild(mkThumb(cv, i));
+    }
+  } else {
+    slides.forEach((src, i) => {
+      const img = document.createElement('img');
+      img.src = src; img.style.cssText = 'width:60px;height:auto;display:block;';
+      tb.appendChild(mkThumb(img, i + 1));
+    });
   }
 }
-function buildPPTXThumbs(){
-  const tb=document.getElementById('thumbbar');tb.innerHTML='';
-  slides.forEach((src,i)=>{
-    const img=document.createElement('img');img.src=src;img.style.cssText='width:66px;height:auto;display:block;';
-    tb.appendChild(mkThumb(img,i+1));
-  });
-}
-function mkThumb(child,pn){
-  const w=document.createElement('div');w.className='th';w.dataset.p=pn;
+function mkThumb(child, pn) {
+  const w = document.createElement('div'); w.className = 'th'; w.dataset.p = pn;
   w.appendChild(child);
-  const n=document.createElement('div');n.className='tnum';n.textContent=pn;w.appendChild(n);
-  w.onclick=()=>{
-    if(busy)return;
-    if(pn===1){renderSpread(0);return;}
-    const s=Math.ceil((pn-1)/2);
-    renderSpread(s);
+  const n = document.createElement('div'); n.className = 'tnum'; n.textContent = pn; w.appendChild(n);
+  w.onclick = () => {
+    if (busy) return;
+    renderSpread(pn === 1 ? 0 : Math.ceil((pn - 1) / 2));
   };
   return w;
 }
-function updThumb(){
-  const ts=totalSpreads(totalPages);
-  const{l,r}=spreadPages(spread,totalPages);
-  document.getElementById('thumbbar').querySelectorAll('.th').forEach(t=>{
-    const p=parseInt(t.dataset.p);
-    t.classList.toggle('on',p===l||p===r);
+function updThumb() {
+  const { l, r } = spreadPages(spread);
+  $('thumbbar').querySelectorAll('.th').forEach(t => {
+    const p = parseInt(t.dataset.p);
+    t.classList.toggle('on', p === l || p === r);
   });
-  const a=document.getElementById('thumbbar').querySelector('.th.on');
-  if(a)a.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  const a = $('thumbbar').querySelector('.th.on');
+  if (a) a.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
 }
 
-/* ── PPTX SLIDE RENDER ─────────────────────────────────── */
-async function renderSlide(zip,path,sW,sH,rW,rH,media){
-  const xml=await zip.file(path).async('string');
-  let bg='#FFFFFF';
-  const bgM=xml.match(/<p:bg>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"[\s\S]*?<\/p:bg>/);
-  if(bgM)bg='#'+bgM[1];
-  const cv=mkC(rW,rH);const ctx=cv.getContext('2d');
-  ctx.fillStyle=bg;ctx.fillRect(0,0,rW,rH);
-  const scX=rW/(sW/96),scY=rH/(sH/96);
-  for(const m of xml.matchAll(/<p:pic>[\s\S]*?<\/p:pic>/g)){
-    const rI=m[0].match(/r:embed="(rId\d+)"/);if(!rI)continue;
-    const rp=path.replace('slides/slide','slides/_rels/slide').replace('.xml','.xml.rels');
-    try{
-      const rx=await zip.file(rp).async('string');
-      const tM=new RegExp(`Id="${rI[1]}"[^>]+Target="([^"]+)"`).exec(rx);
-      if(!tM)continue;const tgt=tM[1].split('/').pop();if(!media[tgt])continue;
-      const oM=m[0].match(/<a:off x="(\d+)" y="(\d+)"/);const eM=m[0].match(/<a:ext cx="(\d+)" cy="(\d+)"/);if(!oM||!eM)continue;
-      const x=parseInt(oM[1])/914400*scX,y=parseInt(oM[2])/914400*scY;
-      const w=parseInt(eM[1])/914400*scX,h=parseInt(eM[2])/914400*scY;
+/* ── PPTX SLIDE RENDER ─────────────────── */
+async function renderSlide(zip, path, sW, sH, rW, rH, media) {
+  const xml = await zip.file(path).async('string');
+  let bg = '#FFFFFF';
+  const bgM = xml.match(/<p:bg>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"[\s\S]*?<\/p:bg>/);
+  if (bgM) bg = '#' + bgM[1];
+  const cv = mkC(rW, rH); const ctx = cv.getContext('2d');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, rW, rH);
+  const scX = rW / (sW / 96), scY = rH / (sH / 96);
+  for (const m of xml.matchAll(/<p:pic>[\s\S]*?<\/p:pic>/g)) {
+    const rI = m[0].match(/r:embed="(rId\d+)"/); if (!rI) continue;
+    const rp = path.replace('slides/slide','slides/_rels/slide').replace('.xml','.xml.rels');
+    try {
+      const rx = await zip.file(rp).async('string');
+      const tM = new RegExp(`Id="${rI[1]}"[^>]+Target="([^"]+)"`).exec(rx);
+      if (!tM) continue; const tgt = tM[1].split('/').pop(); if (!media[tgt]) continue;
+      const oM = m[0].match(/<a:off x="(\d+)" y="(\d+)"/);
+      const eM = m[0].match(/<a:ext cx="(\d+)" cy="(\d+)"/); if (!oM || !eM) continue;
+      const x=parseInt(oM[1])/914400*scX, y=parseInt(oM[2])/914400*scY;
+      const w=parseInt(eM[1])/914400*scX, h=parseInt(eM[2])/914400*scY;
       await new Promise(res=>{const img=new Image();img.onload=()=>{ctx.drawImage(img,x,y,w,h);res();};img.onerror=res;img.src=media[tgt];});
-    }catch(e){}
+    } catch(e) {}
   }
-  for(const sp of xml.matchAll(/<p:sp>[\s\S]*?<\/p:sp>/g)){
-    const oM=sp[0].match(/<a:off x="(\d+)" y="(\d+)"/);const eM=sp[0].match(/<a:ext cx="(\d+)" cy="(\d+)"/);if(!oM||!eM)continue;
-    const x=parseInt(oM[1])/914400*scX,y=parseInt(oM[2])/914400*scY;
-    const bw=parseInt(eM[1])/914400*scX,bh=parseInt(eM[2])/914400*scY;
+  for (const sp of xml.matchAll(/<p:sp>[\s\S]*?<\/p:sp>/g)) {
+    const oM=sp[0].match(/<a:off x="(\d+)" y="(\d+)"/);
+    const eM=sp[0].match(/<a:ext cx="(\d+)" cy="(\d+)"/); if (!oM||!eM) continue;
+    const x=parseInt(oM[1])/914400*scX, y=parseInt(oM[2])/914400*scY;
+    const bw=parseInt(eM[1])/914400*scX, bh=parseInt(eM[2])/914400*scY;
     const fM=sp[0].match(/<a:solidFill>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"[\s\S]*?<\/a:solidFill>/);
-    if(fM){ctx.fillStyle='#'+fM[1];ctx.fillRect(x,y,bw,bh);}
+    if (fM) { ctx.fillStyle='#'+fM[1]; ctx.fillRect(x,y,bw,bh); }
     let ty=y+8;
-    for(const pa of sp[0].matchAll(/<a:p>([\s\S]*?)<\/a:p>/g)){
-      const runs=[...pa[1].matchAll(/<a:r>([\s\S]*?)<\/a:r>/g)];if(!runs.length){ty+=14;continue;}
+    for (const pa of sp[0].matchAll(/<a:p>([\s\S]*?)<\/a:p>/g)) {
+      const runs=[...pa[1].matchAll(/<a:r>([\s\S]*?)<\/a:r>/g)];
+      if (!runs.length){ty+=14;continue;}
       let txt='',fs=14*scY,bold=false,clr='#111';
-      for(const r of runs){const sz=r[1].match(/sz="(\d+)"/);if(sz)fs=parseInt(sz[1])/100*scY;if(/<a:rPr[^>]*b="1"/.test(r[1]))bold=true;const cm=r[1].match(/<a:solidFill>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"[\s\S]*?<\/a:solidFill>/);if(cm)clr='#'+cm[1];for(const t of r[1].matchAll(/<a:t>([^<]*)<\/a:t>/g))txt+=t[1];}
-      if(txt.trim()){ctx.font=`${bold?'600':'400'} ${Math.max(10,fs)}px Segoe UI,Arial,sans-serif`;ctx.fillStyle=clr;ctx.save();ctx.rect(x,y,bw,bh);ctx.clip();const wds=txt.split(' ');let ln='';for(const wd of wds){const t2=ln+wd+' ';if(ctx.measureText(t2).width>bw-8&&ln){ctx.fillText(ln.trim(),x+5,ty+fs);ty+=fs*1.25;ln=wd+' ';}else ln=t2;}if(ln.trim()){ctx.fillText(ln.trim(),x+5,ty+fs);ty+=fs*1.35;}ctx.restore();}else ty+=fs*1.2;
+      for (const r of runs){
+        const sz=r[1].match(/sz="(\d+)"/);if(sz)fs=parseInt(sz[1])/100*scY;
+        if(/<a:rPr[^>]*b="1"/.test(r[1]))bold=true;
+        const cm=r[1].match(/<a:solidFill>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"[\s\S]*?<\/a:solidFill>/);
+        if(cm)clr='#'+cm[1];
+        for(const t of r[1].matchAll(/<a:t>([^<]*)<\/a:t>/g))txt+=t[1];
+      }
+      if (txt.trim()) {
+        ctx.font=`${bold?'600':'400'} ${Math.max(10,fs)}px Segoe UI,Arial,sans-serif`;
+        ctx.fillStyle=clr;ctx.save();ctx.rect(x,y,bw,bh);ctx.clip();
+        const wds=txt.split(' ');let ln='';
+        for(const wd of wds){const t2=ln+wd+' ';if(ctx.measureText(t2).width>bw-8&&ln){ctx.fillText(ln.trim(),x+5,ty+fs);ty+=fs*1.25;ln=wd+' ';}else ln=t2;}
+        if(ln.trim()){ctx.fillText(ln.trim(),x+5,ty+fs);ty+=fs*1.35;}
+        ctx.restore();
+      } else ty+=fs*1.2;
     }
   }
-  return cv.toDataURL('image/jpeg',.92);
+  return cv.toDataURL('image/jpeg', .92);
 }
 
-/* ── LOADER / TOAST / PROC ─────────────────────────────── */
-function showLoader(t){setLoaderTxt(t);setLoader(0);document.getElementById('loader').classList.add('on');}
-function hideLoader(){document.getElementById('loader').classList.remove('on');}
-function setLoader(v){document.getElementById('loaderFill').style.width=v+'%';}
-function setLoaderTxt(t){document.getElementById('loaderTxt').textContent=t;}
-function showProc(m){document.getElementById('procmsg').textContent=m;document.getElementById('procsub').textContent='';document.getElementById('procfill').style.width='0%';document.getElementById('procbox').classList.add('show');document.getElementById('booksSection').style.opacity='.3';}
-function hideProc(){document.getElementById('procbox').classList.remove('show');document.getElementById('booksSection').style.opacity='1';}
-function setProc(v,sub){document.getElementById('procfill').style.width=v+'%';if(sub!==undefined)document.getElementById('procsub').textContent=sub;}
+/* ── HELPERS ───────────────────────────── */
+const mkC = (w, h, id) => { const c = document.createElement('canvas'); c.width = w; c.height = h; if (id) c.id = id; return c; };
+function setP(v, msg) {
+  $('pfill').style.width = v + '%';
+  if (msg !== undefined) $('psub').textContent = msg;
+}
 let _tt;
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.remove('on'),3200);}
-
-/* ── HASH ──────────────────────────────────────────────── */
-async function checkHash(){const id=location.hash.slice(1);if(id.startsWith('fb_')){const b=await IDB.get(id);if(b)openBook(id);else{toast('⚠️ Ном олдсонгүй');renderGrid();}}}
-renderGrid();checkHash();
-window.addEventListener('hashchange',checkHash);
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('on'), 3000);
+}
 </script>
 </body>
 </html>
