@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 FlipBook</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0e1a;--bg2:#181728;--bg3:#221f35;--gold:#c9a84c;--gold2:#a07828;--text:#dde0ec;--muted:#6b678f;--brd:rgba(255,255,255,.08);--r:12px}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+nav{background:var(--bg2);border-bottom:1px solid var(--brd);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.logo{font-size:18px;font-weight:700;color:var(--gold)}.logo span{color:var(--text);font-weight:400}
+.nr{display:flex;gap:8px;align-items:center}
+.nb{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;line-height:1}
+.gh{background:transparent;border:1px solid var(--brd);color:var(--muted)}.gh:hover{color:var(--text)}
+.gd{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0f0e1a}.gd:hover{opacity:.88}
+input[type=file]{display:none}
+
+/* KEY FIX: explicit show/hide — no class toggling conflicts */
+#home{display:block}
+#viewer{display:none;flex-direction:column;align-items:center;padding:14px 14px 44px;min-height:calc(100vh - 57px)}
+
+/* HOME */
+#home>div{max-width:880px;margin:0 auto;padding:36px 20px}
+.hero{text-align:center;padding:44px 0 32px}
+.hero h1{font-size:32px;font-weight:700;margin-bottom:10px}.hero h1 em{color:var(--gold);font-style:normal}
+.hero p{font-size:15px;color:var(--muted)}
+.dc{border:1.5px dashed rgba(201,168,76,.3);border-radius:var(--r);padding:42px 28px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:26px;background:rgba(201,168,76,.02)}
+.dc:hover,.dc.ov{border-color:var(--gold);background:rgba(201,168,76,.06)}
+.di{font-size:44px;margin-bottom:14px}.dc h2{font-size:17px;margin-bottom:5px}.dc p{font-size:13px;color:var(--muted)}
+.ft{display:flex;justify-content:center;gap:8px;margin-top:12px}
+.tag{padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.tp{background:rgba(220,70,50,.15);color:#f07060;border:1px solid rgba(220,70,50,.25)}
+.tq{background:rgba(210,100,40,.15);color:#f0a060;border:1px solid rgba(210,100,40,.25)}
+
+.pb{display:none;flex-direction:column;align-items:center;padding:36px;text-align:center}
+.pb.s{display:flex}
+.bs{width:50px;height:50px;border:5px solid rgba(201,168,76,.14);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;margin-bottom:16px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pp{width:220px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:9px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .3s;width:0%}
+.sl{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+.grd{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:12px;margin-bottom:28px}
+.bc{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:.2s}
+.bc:hover{border-color:rgba(201,168,76,.38);transform:translateY(-3px)}
+.bt{height:108px;display:flex;align-items:center;justify-content:center;background:var(--bg3);font-size:32px;overflow:hidden;position:relative}
+.bt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bi{padding:8px 11px}.bn{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}.bm{font-size:11px;color:var(--muted)}
+.ba{display:flex;gap:5px;padding:0 11px 9px}
+.ab{flex:1;padding:5px 0;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--brd);background:transparent;color:var(--muted);transition:.15s;text-align:center;user-select:none}
+.ab:hover{color:var(--text);background:var(--bg3)}
+.as{color:#60c0a0;border-color:rgba(96,192,160,.28)}.as:hover{background:rgba(96,192,160,.1)}
+.ad{color:#f07060;border-color:rgba(240,112,96,.28)}.ad:hover{background:rgba(240,112,96,.1)}
+
+/* VIEWER */
+.vt{width:100%;max-width:960px;display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.bb{background:var(--bg2);border:1px solid var(--brd);color:var(--muted);padding:6px 13px;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap}.bb:hover{color:var(--text)}
+.lb{flex:1;display:flex;align-items:center;gap:7px;background:var(--bg2);border:1px solid var(--brd);border-radius:8px;padding:5px 11px;min-width:0}
+.lb input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:12px;min-width:0}
+.cb{background:rgba(201,168,76,.14);border:1px solid rgba(201,168,76,.28);color:var(--gold);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap}.cb:hover{background:rgba(201,168,76,.26)}
+.tb{display:flex;align-items:center;gap:6px;background:var(--bg2);padding:7px 13px;border-radius:40px;border:1px solid var(--brd);margin-bottom:12px;flex-wrap:wrap;justify-content:center}
+.t{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#aaa;width:30px;height:30px;border-radius:7px;font-size:13px;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center}
+.t:hover{background:rgba(255,255,255,.12);color:#ddd}.t:active{transform:scale(.92)}
+.ts{width:1px;height:20px;background:var(--brd)}
+.zl{font-size:12px;color:var(--muted);min-width:36px;text-align:center}
+.bs2{perspective:2400px}
+.bk{position:relative;display:flex;border-radius:3px 10px 10px 3px;box-shadow:0 40px 90px rgba(0,0,0,.8)}
+.bk::before{content:'';position:absolute;left:0;top:0;bottom:0;width:7px;background:linear-gradient(to right,rgba(0,0,0,.55),rgba(0,0,0,.08));z-index:10;border-radius:3px 0 0 3px;pointer-events:none}
+.pw{position:relative;overflow:hidden;background:#f4efe3}
+.pw.L{border-radius:3px 0 0 3px;box-shadow:inset -10px 0 22px rgba(0,0,0,.28)}
+.pw.R{border-radius:0 10px 10px 0;box-shadow:inset 8px 0 18px rgba(0,0,0,.1)}
+.pw.R::after{content:'';position:absolute;bottom:0;right:0;width:40px;height:40px;background:linear-gradient(225deg,#181728 45%,transparent 45%);opacity:.5;pointer-events:none}
+.pw canvas{display:block}
+.fl{position:absolute;top:0;transform-origin:left center;transform-style:preserve-3d;z-index:30;pointer-events:none;display:none}
+.ff,.fb{position:absolute;top:0;left:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fb{transform:rotateY(180deg)}
+@keyframes fwd{from{transform:rotateY(0)}to{transform:rotateY(-180deg)}}
+@keyframes bwd{from{transform:rotateY(-180deg)}to{transform:rotateY(0)}}
+.gf{display:block;animation:fwd .6s cubic-bezier(.645,.045,.355,1) forwards}
+.gb{display:block;animation:bwd .6s cubic-bezier(.645,.045,.355,1) forwards}
+.ct{display:flex;align-items:center;gap:11px;margin-top:16px;background:var(--bg2);padding:8px 18px;border-radius:50px;border:1px solid var(--brd)}
+.c{background:rgba(201,168,76,.13);border:1px solid rgba(201,168,76,.26);color:var(--gold);width:35px;height:35px;border-radius:50%;font-size:14px;cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center}
+.c:hover{background:rgba(201,168,76,.26)}.c:active{transform:scale(.92)}.c:disabled{opacity:.22;cursor:default}
+.pi{font-size:13px;color:var(--muted);min-width:76px;text-align:center}.pi b{color:var(--gold);font-weight:600}
+.ht{margin-top:7px;font-size:11px;color:#2a2840}
+.ht kbd{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:1px 5px;font-family:monospace;font-size:10px}
+.thb{display:flex;gap:6px;margin-top:12px;max-width:min(90vw,800px);overflow-x:auto;padding:5px 3px;scrollbar-width:thin;scrollbar-color:#2a2940 transparent}
+.th{flex-shrink:0;cursor:pointer;border:2px solid transparent;border-radius:4px;overflow:hidden;opacity:.44;transition:.2s;position:relative}
+.th:hover{opacity:.74}.th.on{border-color:var(--gold);opacity:1}
+.th canvas,.th img{display:block}
+.tn{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:9px;color:rgba(255,255,255,.7);background:rgba(0,0,0,.45)}
+.ld{position:fixed;inset:0;background:rgba(15,14,26,.93);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999}
+.ld.on{display:flex}
+.ls{width:42px;height:42px;border:4px solid rgba(201,168,76,.14);border-top-color:var(--gold);border-radius:50%;animation:sp .75s linear infinite}
+.lt{margin-top:11px;font-size:13px;color:var(--muted)}
+.lb2{width:180px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:9px;overflow:hidden}
+.lf{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .3s;width:0%}
+.tst{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1e1c30;color:var(--text);border:1px solid var(--brd);padding:9px 20px;border-radius:30px;font-size:13px;z-index:1000;opacity:0;transition:opacity .28s;pointer-events:none;white-space:nowrap}
+.tst.on{opacity:1}
+@media(max-width:560px){.pw.L{display:none}.bk::before{display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">📚 <span>Flip</span>Book</div>
+  <div class="nr">
+    <button class="nb gh" id="H">🏠 Нүүр</button>
+    <label class="nb gd" for="fi">＋ Upload</label>
+    <input type="file" id="fi" accept=".pdf,.pptx,.ppt" multiple>
+  </div>
+</nav>
+
+<div id="home">
+  <div>
+    <div class="hero"><h1>PDF & PPTX-ийг <em>flipbook</em> болгох</h1><p>Upload хийгээд шууд link авна — хэн ч нээж уншина</p></div>
+    <label class="dc" id="dz" for="fi">
+      <div class="di">📂</div><h2>Файлаа энд оруулна уу</h2><p>Чирж тавих эсвэл дарж сонгоно уу</p>
+      <div class="ft"><span class="tag tp">PDF</span><span class="tag tq">PPTX · PPT</span></div>
+    </label>
+    <div class="pb" id="pr"><div class="bs"></div><div style="font-size:15px;font-weight:500" id="pt">Боловсруулж байна...</div><div style="font-size:12px;color:var(--muted);margin-top:4px" id="ps"></div><div class="pp"><div class="pf" id="pv"></div></div></div>
+    <div id="bw"><div class="sl" id="slb" style="display:none">Таны номууд</div><div class="grd" id="gr"></div></div>
+  </div>
+</div>
+
+<div id="viewer">
+  <div class="vt">
+    <button class="bb" id="bk">← Буцах</button>
+    <div class="lb"><span style="font-size:14px;flex-shrink:0">🔗</span><input id="si" readonly><button class="cb" id="cp">Хуулах</button></div>
+  </div>
+  <div class="tb">
+    <button class="t" id="zo">−</button><span class="zl" id="zl">100%</span><button class="t" id="zi">+</button>
+    <div class="ts"></div><button class="t" id="ft">⊡</button><button class="t" id="fs">⛶</button>
+  </div>
+  <div class="bs2"><div class="bk" id="bk2"><div class="pw L" id="LW"></div><div class="pw R" id="RW"></div><div class="fl" id="FL"><canvas class="ff" id="FF"></canvas><canvas class="fb" id="FB"></canvas></div></div></div>
+  <div class="ct"><button class="c" id="fb">⟪</button><button class="c" id="pb">‹</button><div class="pi"><b id="cp2">1</b><span id="cp3"></span> / <b id="tp">?</b></div><button class="c" id="nb">›</button><button class="c" id="lb">⟫</button></div>
+  <div class="ht"><kbd>←</kbd> <kbd>→</kbd> хуудас &nbsp;·&nbsp; <kbd>+</kbd> <kbd>−</kbd> томруулах</div>
+  <div class="thb" id="TH"></div>
+</div>
+
+<div class="tst" id="tst"></div>
+<div class="ld" id="ld"><div class="ls"></div><div class="lt" id="lt">...</div><div class="lb2"><div class="lf" id="lf"></div></div></div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+const DB={
+  all(){try{return JSON.parse(localStorage.getItem('fb')||'[]')}catch(e){return[]}},
+  save(a){try{localStorage.setItem('fb',JSON.stringify(a))}catch(e){msg('⚠️ Зай хүрэлцэхгүй')}},
+  add(b){const a=DB.all();a.unshift(b);DB.save(a)},
+  get(id){return DB.all().find(b=>b.id===id)},
+  del(id){DB.save(DB.all().filter(b=>b.id!==id))}
+};
+
+let cur=null,pdf=null,sl=[],tp=0,ts=0,sp=0,sc=1.3,busy=false,pw=0,ph=0;
+
+// PAGE SWITCH — простой display style
+function goHome(){document.getElementById('viewer').style.display='none';document.getElementById('home').style.display='block';renderGrid();}
+function goViewer(){document.getElementById('home').style.display='none';document.getElementById('viewer').style.display='flex';}
+document.getElementById('H').onclick=goHome;
+document.getElementById('bk').onclick=goHome;
+
+document.getElementById('fi').onchange=e=>{[...e.target.files].forEach(handleFile);e.target.value='';};
+const dz=document.getElementById('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('ov');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('ov'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('ov');[...e.dataTransfer.files].forEach(handleFile);});
+
+async function handleFile(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(!['pdf','pptx','ppt'].includes(ext)){msg('⚠️ PDF эсвэл PPTX оруулна уу');return;}
+  const type=ext==='pdf'?'pdf':'pptx';
+  showProc(`"${file.name}" боловсруулж байна...`);
+  try{
+    const buf=await file.arrayBuffer();
+    const data=toB64(buf);let thumb='',pages=0;
+    if(type==='pdf'){const p=await pdfjsLib.getDocument({data:buf.slice()}).promise;pages=p.numPages;setPP(35);thumb=await pdfThumb(p,1);setPP(70);}
+    else{const r=await pptxInfo(buf.slice());pages=r.count;thumb=r.thumb;setPP(70);}
+    const id='fb_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    DB.add({id,name:file.name.replace(/\.[^.]+$/,''),type,created:Date.now(),pages,thumb,data});
+    setPP(100);await wait(350);hideProc();renderGrid();await openBook(id);
+  }catch(err){hideProc();msg('⚠️ '+err.message);}
+}
+
+function toB64(buf){let s='';const b=new Uint8Array(buf);for(let i=0;i<b.length;i+=4096)s+=String.fromCharCode(...b.subarray(i,i+4096));return btoa(s);}
+function toBuf(s){const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a.buffer;}
+
+async function pdfThumb(p,n){const pg=await p.getPage(n);const vp=pg.getViewport({scale:.18});const cv=mkC(vp.width,vp.height);const ctx=cv.getContext('2d');ctx.fillStyle='#f5f0e4';ctx.fillRect(0,0,vp.width,vp.height);await pg.render({canvasContext:ctx,viewport:vp}).promise;return cv.toDataURL('image/jpeg',.82);}
+async function pptxInfo(buf){const zip=await JSZip.loadAsync(buf);const count=Object.keys(zip.files).filter(f=>/^ppt\/slides\/slide\d+\.xml$/.test(f)).length;let thumb='';try{const mf=Object.keys(zip.files).find(f=>f.startsWith('ppt/media/')&&/\.(png|jpg|jpeg)$/i.test(f));if(mf){const blob=await zip.file(mf).async('blob');thumb=await new Promise(r=>{const fr=new FileReader();fr.onload=e=>r(e.target.result);fr.readAsDataURL(blob);});}}catch(e){}return{count,thumb};}
+
+function renderGrid(){
+  const books=DB.all(),g=document.getElementById('gr'),lbl=document.getElementById('slb');
+  g.innerHTML='';lbl.style.display=books.length?'block':'none';
+  books.forEach(b=>{
+    const c=document.createElement('div');c.className='bc';
+    const hi=b.thumb&&b.thumb.startsWith('data:');
+    c.innerHTML=`<div class="bt">${hi?`<img src="${b.thumb}" alt="">`:`<span>${b.type==='pdf'?'📄':'📊'}</span>`}</div>
+<div class="bi"><div class="bn">${esc(b.name)}</div><div class="bm">${b.pages} хуудас · ${new Date(b.created).toLocaleDateString('mn-MN')}</div></div>
+<div class="ba"><div class="ab" data-o="${b.id}">📖 Нээх</div><div class="ab as" data-s="${b.id}">🔗 Link</div><div class="ab ad" data-d="${b.id}">🗑</div></div>`;
+    c.querySelector('[data-o]').onclick=e=>{e.stopPropagation();openBook(b.id);};
+    c.querySelector('[data-s]').onclick=e=>{e.stopPropagation();cpyLink(b.id);};
+    c.querySelector('[data-d]').onclick=e=>{e.stopPropagation();if(confirm('"'+b.name+'" устгах уу?')){DB.del(b.id);renderGrid();}};
+    c.ondblclick=()=>openBook(b.id);g.appendChild(c);
+  });
+}
+const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const lnk=id=>location.href.split('#')[0]+'#'+id;
+function cpyLink(id){navigator.clipboard.writeText(lnk(id)).then(()=>msg('✅ Link хуулагдлаа!')).catch(()=>msg('⚠️ Хуулах боломжгүй'));}
+document.getElementById('cp').onclick=()=>{navigator.clipboard.writeText(document.getElementById('si').value).then(()=>msg('✅ Link хуулагдлаа!')).catch(()=>{});};
+
+async function openBook(id){
+  const b=DB.get(id);if(!b){msg('⚠️ Ном олдсонгүй');return;}
+  cur=b;document.getElementById('si').value=lnk(id);showLoader('Ном нээж байна...');
+  try{const buf=toBuf(b.data);if(b.type==='pdf')await loadPDF(buf);else await loadPPTX(buf);goViewer();}
+  catch(err){hideLoader();msg('⚠️ '+err.message);}
+}
+
+async function loadPDF(buf){
+  pdf=null;sl=[];const task=pdfjsLib.getDocument({data:buf});
+  task.onProgress=p=>{if(p.total)setL(p.loaded/p.total*50);};
+  pdf=await task.promise;tp=pdf.numPages;setL(55);
+  const vp=(await pdf.getPage(1)).getViewport({scale:sc});pw=vp.width;ph=vp.height;
+  await initV();await buildPDFT();hideLoader();await rSp(0);
+}
+
+async function loadPPTX(buf){
+  pdf=null;sl=[];const zip=await JSZip.loadAsync(buf);
+  let sW=960,sH=540;
+  try{const px=await zip.file('ppt/presentation.xml').async('string');const cM=px.match(/cx="(\d+)"/),yM=px.match(/cy="(\d+)"/);if(cM&&yM){sW=Math.round(parseInt(cM[1])/914400*96);sH=Math.round(parseInt(yM[1])/914400*96);}}catch(e){}
+  const sF=Object.keys(zip.files).filter(f=>/^ppt\/slides\/slide\d+\.xml$/.test(f)).sort((a,b)=>parseInt(a.match(/\d+/)[0])-parseInt(b.match(/\d+/)[0]));
+  tp=sF.length;if(!tp)throw new Error('Слайд олдсонгүй');
+  const rW=Math.max(sW,640),rH=Math.round(rW*sH/sW);pw=rW;ph=rH;
+  const media={};
+  for(const[p,e] of Object.entries(zip.files)){if(p.startsWith('ppt/media/')&&!e.dir){const ex=p.split('.').pop().toLowerCase();media[p.split('/').pop()]=URL.createObjectURL(new Blob([await e.async('blob')],{type:ex==='png'?'image/png':'image/jpeg'}));}}
+  for(let i=0;i<sF.length;i++){setL(20+i/sF.length*65);setLT(`Слайд ${i+1}/${sF.length}`);sl.push(await rSlide(zip,sF[i],sW,sH,rW,rH,media));}
+  await initV();buildPPTXT();hideLoader();await rSp(0);
+}
+
+async function rSlide(zip,path,sW,sH,rW,rH,media){
+  const xml=await zip.file(path).async('string');let bg='#FFFFFF';
+  const bgM=xml.match(/<p:bg>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"[\s\S]*?<\/p:bg>/);if(bgM)bg='#'+bgM[1];
+  const cv=mkC(rW,rH);const ctx=cv.getContext('2d');ctx.fillStyle=bg;ctx.fillRect(0,0,rW,rH);
+  const scX=rW/(sW/96),scY=rH/(sH/96);
+  for(const m of xml.matchAll(/<p:pic>[\s\S]*?<\/p:pic>/g)){
+    const rI=m[0].match(/r:embed="(rId\d+)"/);if(!rI)continue;
+    const rp=path.replace('slides/slide','slides/_rels/slide').replace('.xml','.xml.rels');
+    try{const rx=await zip.file(rp).async('string');const tM=new RegExp(`Id="${rI[1]}"[^>]+Target="([^"]+)"`).exec(rx);if(!tM)continue;const tgt=tM[1].split('/').pop();if(!media[tgt])continue;
+      const oM=m[0].match(/<a:off x="(\d+)" y="(\d+)"/);const eM=m[0].match(/<a:ext cx="(\d+)" cy="(\d+)"/);if(!oM||!eM)continue;
+      const x=parseInt(oM[1])/914400*scX,y=parseInt(oM[2])/914400*scY,w=parseInt(eM[1])/914400*scX,h=parseInt(eM[2])/914400*scY;
+      await new Promise(r=>{const img=new Image();img.onload=()=>{ctx.drawImage(img,x,y,w,h);r();};img.onerror=r;img.src=media[tgt];});}catch(e){}
+  }
+  for(const s of xml.matchAll(/<p:sp>[\s\S]*?<\/p:sp>/g)){
+    const oM=s[0].match(/<a:off x="(\d+)" y="(\d+)"/);const eM=s[0].match(/<a:ext cx="(\d+)" cy="(\d+)"/);if(!oM||!eM)continue;
+    const x=parseInt(oM[1])/914400*scX,y=parseInt(oM[2])/914400*scY,w=parseInt(eM[1])/914400*scX,h2=parseInt(eM[2])/914400*scY;
+    const fM=s[0].match(/<a:solidFill>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"[\s\S]*?<\/a:solidFill>/);
+    if(fM){ctx.fillStyle='#'+fM[1];ctx.fillRect(x,y,w,h2);}
+    let ty=y+8;
+    for(const pa of s[0].matchAll(/<a:p>([\s\S]*?)<\/a:p>/g)){
+      const runs=[...pa[1].matchAll(/<a:r>([\s\S]*?)<\/a:r>/g)];if(!runs.length){ty+=14;continue;}
+      let txt='',fs=14*scY,bold=false,clr='#111';
+      for(const r of runs){const sz=r[1].match(/sz="(\d+)"/);if(sz)fs=parseInt(sz[1])/100*scY;if(/<a:rPr[^>]*b="1"/.test(r[1]))bold=true;const cm=r[1].match(/<a:solidFill>[\s\S]*?<a:srgbClr val="([0-9A-Fa-f]{6})"[\s\S]*?<\/a:solidFill>/);if(cm)clr='#'+cm[1];for(const t of r[1].matchAll(/<a:t>([^<]*)<\/a:t>/g))txt+=t[1];}
+      if(txt.trim()){ctx.font=`${bold?'600':'400'} ${Math.max(10,fs)}px Segoe UI,Arial,sans-serif`;ctx.fillStyle=clr;ctx.save();ctx.rect(x,y,w,h2);ctx.clip();const wds=txt.split(' ');let ln='';for(const wd of wds){const t2=ln+wd+' ';if(ctx.measureText(t2).width>w-8&&ln){ctx.fillText(ln.trim(),x+5,ty+fs);ty+=fs*1.25;ln=wd+' ';}else ln=t2;}if(ln.trim()){ctx.fillText(ln.trim(),x+5,ty+fs);ty+=fs*1.35;}ctx.restore();}else ty+=fs*1.2;
+    }
+  }
+  return cv.toDataURL('image/jpeg',.92);
+}
+
+async function initV(){ts=Math.ceil(tp/2);sp=0;document.getElementById('tp').textContent=tp;document.getElementById('LW').innerHTML='';document.getElementById('RW').innerHTML='';document.getElementById('LW').appendChild(mkC(pw,ph,'LC'));document.getElementById('RW').appendChild(mkC(pw,ph,'RC'));const FL=document.getElementById('FL');FL.style.width=pw+'px';FL.style.height=ph+'px';['FF','FB'].forEach(id=>{const c=document.getElementById(id);c.width=pw;c.height=ph;});document.getElementById('TH').innerHTML='';updB();}
+const mkC=(w,h,id='')=>{const c=document.createElement('canvas');c.width=w;c.height=h;if(id)c.id=id;return c;};
+
+async function rSp(s){sp=s;const lp=s*2+1,rp=s*2+2;document.getElementById('cp2').textContent=lp;document.getElementById('cp3').textContent=rp<=tp?'–'+rp:'';await draw(document.getElementById('LC'),lp);await draw(document.getElementById('RC'),rp<=tp?rp:0);updT();updB();}
+async function draw(cv,pn){const ctx=cv.getContext('2d');if(!pn){ctx.fillStyle='#f0ebe0';ctx.fillRect(0,0,cv.width,cv.height);return;}if(cur.type==='pdf'){const pg=await pdf.getPage(pn);const vp=pg.getViewport({scale:sc});cv.width=vp.width;cv.height=vp.height;ctx.fillStyle='#f5f0e4';ctx.fillRect(0,0,cv.width,cv.height);await pg.render({canvasContext:ctx,viewport:vp}).promise;}else{const img=new Image();await new Promise(r=>{img.onload=r;img.src=sl[pn-1];});cv.width=img.width;cv.height=img.height;ctx.drawImage(img,0,0);}}
+
+async function fwd(){if(busy||sp>=ts-1)return;busy=true;const nx=sp+1;document.getElementById('FF').getContext('2d').drawImage(document.getElementById('RC'),0,0);await draw(document.getElementById('FB'),nx*2+1);const FL=document.getElementById('FL');FL.style.left=pw+'px';FL.className='fl gf';await draw(document.getElementById('LC'),nx*2+1);await draw(document.getElementById('RC'),nx*2+2<=tp?nx*2+2:0);FL.addEventListener('animationend',()=>{FL.className='fl';sp=nx;document.getElementById('cp2').textContent=sp*2+1;document.getElementById('cp3').textContent=sp*2+2<=tp?'–'+(sp*2+2):'';updT();updB();busy=false;},{once:true});}
+async function bwd(){if(busy||sp<=0)return;busy=true;const pv=sp-1;document.getElementById('FB').getContext('2d').drawImage(document.getElementById('LC'),0,0);await draw(document.getElementById('FF'),pv*2+2<=tp?pv*2+2:0);const FL=document.getElementById('FL');FL.style.left=pw+'px';FL.className='fl gb';await draw(document.getElementById('LC'),pv*2+1);await draw(document.getElementById('RC'),pv*2+2<=tp?pv*2+2:0);FL.addEventListener('animationend',()=>{FL.className='fl';sp=pv;document.getElementById('cp2').textContent=sp*2+1;document.getElementById('cp3').textContent=sp*2+2<=tp?'–'+(sp*2+2):'';updT();updB();busy=false;},{once:true});}
+
+document.getElementById('pb').onclick=bwd;document.getElementById('nb').onclick=fwd;
+document.getElementById('fb').onclick=()=>{if(!busy)rSp(0);};
+document.getElementById('lb').onclick=()=>{if(!busy)rSp(ts-1);};
+document.addEventListener('keydown',e=>{if(document.getElementById('viewer').style.display==='none')return;if(e.key==='ArrowRight'||e.key==='ArrowDown')fwd();if(e.key==='ArrowLeft'||e.key==='ArrowUp')bwd();if(e.key==='+'||e.key==='=')zoom(.15);if(e.key==='-')zoom(-.15);});
+let tx=0;document.getElementById('bk2').addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});document.getElementById('bk2').addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(d<-50)fwd();else if(d>50)bwd();});
+function updB(){document.getElementById('pb').disabled=sp<=0;document.getElementById('fb').disabled=sp<=0;document.getElementById('nb').disabled=sp>=ts-1;document.getElementById('lb').disabled=sp>=ts-1;}
+
+async function zoom(d){sc=Math.max(.4,Math.min(3,sc+d));document.getElementById('zl').textContent=Math.round(sc/1.3*100)+'%';if(cur?.type==='pdf'&&pdf){const vp=(await pdf.getPage(1)).getViewport({scale:sc});pw=vp.width;ph=vp.height;['LC','RC','FF','FB'].forEach(id=>{const c=document.getElementById(id);c.width=pw;c.height=ph;});document.getElementById('FL').style.width=pw+'px';document.getElementById('FL').style.height=ph+'px';}await rSp(sp);}
+document.getElementById('zi').onclick=()=>zoom(.15);document.getElementById('zo').onclick=()=>zoom(-.15);
+document.getElementById('ft').onclick=async()=>{if(cur?.type==='pdf'&&pdf){const vp=(await pdf.getPage(1)).getViewport({scale:1});sc=window.innerWidth*.42/vp.width;}else sc=1;await zoom(0);};
+document.getElementById('fs').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();};
+
+async function buildPDFT(){const tb=document.getElementById('TH');tb.innerHTML='';for(let i=1;i<=tp;i++){setL(55+i/tp*42);setLT(`Зураг ${i}/${tp}`);const pg=await pdf.getPage(i);const vp=pg.getViewport({scale:.12});const cv=mkC(vp.width,vp.height);cv.getContext('2d').fillStyle='#f5f0e4';cv.getContext('2d').fillRect(0,0,vp.width,vp.height);await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;tb.appendChild(mkT(cv,i));}}
+function buildPPTXT(){const tb=document.getElementById('TH');tb.innerHTML='';sl.forEach((src,i)=>{const img=document.createElement('img');img.src=src;img.style.cssText='width:68px;height:auto;display:block;';tb.appendChild(mkT(img,i+1));});}
+function mkT(child,pn){const w=document.createElement('div');w.className='th';w.dataset.p=pn;w.appendChild(child);const n=document.createElement('div');n.className='tn';n.textContent=pn;w.appendChild(n);w.onclick=()=>{if(!busy)rSp(Math.floor((pn-1)/2));};return w;}
+function updT(){const lp=sp*2+1,rp=sp*2+2;document.getElementById('TH').querySelectorAll('.th').forEach(t=>{const p=parseInt(t.dataset.p);t.classList.toggle('on',p===lp||p===rp);});const a=document.getElementById('TH').querySelector('.th.on');if(a)a.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}
+
+function showLoader(t){setLT(t);setL(0);document.getElementById('ld').classList.add('on');}
+function hideLoader(){document.getElementById('ld').classList.remove('on');}
+function setL(v){document.getElementById('lf').style.width=v+'%';}
+function setLT(t){document.getElementById('lt').textContent=t;}
+function showProc(m){document.getElementById('pt').textContent=m;document.getElementById('ps').textContent='';setPP(0);document.getElementById('pr').classList.add('s');document.getElementById('bw').style.opacity='.3';}
+function hideProc(){document.getElementById('pr').classList.remove('s');document.getElementById('bw').style.opacity='1';}
+function setPP(v){document.getElementById('pv').style.width=v+'%';}
+let _t;function msg(m){const t=document.getElementById('tst');t.textContent=m;t.classList.add('on');clearTimeout(_t);_t=setTimeout(()=>t.classList.remove('on'),3200);}
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+function checkHash(){const id=location.hash.slice(1);if(id.startsWith('fb_')&&DB.get(id))openBook(id);}
+renderGrid();checkHash();
+window.addEventListener('hashchange',checkHash);
+</script>
+</body>
+</html>
